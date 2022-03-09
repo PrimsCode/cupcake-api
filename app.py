@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, redirect, render_template, request
 from models import db, connect_db, Cupcake
 
 app = Flask(__name__)
@@ -21,6 +21,29 @@ def serialize_cupcake(cupcake):
         'image': cupcake.image,
         'recipe': cupcake.recipe
     }
+
+@app.route('/')
+def index_page():
+    """Show cupcake landing page"""
+
+    return render_template('index.html')
+
+# @app.route('/')
+# def add_cupcake_form():
+#     """Add a cupcake from form"""
+
+#     new_cupcake = Cupcake(
+#         flavor=request.form['flavor'],
+#         size=request.form['size'],
+#         rating=request.form['rating'],
+#         image=request.form['image'],
+#         recipe=request.form['recipe'],)
+#     db.session.add(new_cupcake)
+#     db.session.commit()
+
+#     flash('Cupcake Added!')
+
+#     return redirect('/')
 
 @app.route('/cupcakes', methods=['GET'])
 def get_all_cupcakes():
@@ -69,6 +92,8 @@ def update_cupcake(cupcake_id):
     cupcake.rating = request.json.get('rating', cupcake.rating)
     cupcake.image = request.json.get('image', cupcake.image)
     cupcake.recipe = request.json.get('recipe', cupcake.recipe)
+
+    db.session.commit()
 
     serialized = serialize_cupcake(cupcake)
     response_json = jsonify(cupcake=serialized)
