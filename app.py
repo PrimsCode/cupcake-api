@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, redirect, render_template, request
+from flask import Flask, jsonify, render_template, request
 from models import db, connect_db, Cupcake
 
 app = Flask(__name__)
@@ -27,23 +27,6 @@ def index_page():
     """Show cupcake landing page"""
 
     return render_template('index.html')
-
-# @app.route('/')
-# def add_cupcake_form():
-#     """Add a cupcake from form"""
-
-#     new_cupcake = Cupcake(
-#         flavor=request.form['flavor'],
-#         size=request.form['size'],
-#         rating=request.form['rating'],
-#         image=request.form['image'],
-#         recipe=request.form['recipe'],)
-#     db.session.add(new_cupcake)
-#     db.session.commit()
-
-#     flash('Cupcake Added!')
-
-#     return redirect('/')
 
 @app.route('/cupcakes', methods=['GET'])
 def get_all_cupcakes():

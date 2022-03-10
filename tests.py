@@ -4,8 +4,9 @@ from app import app
 from models import db, Cupcake
 
 # Use test database and don't clutter tests with SQL
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql:///cupcakes_test'
-app.config['SQLALCHEMY_ECHO'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:admin@localhost:5432/cupcake'
+app.config['SQLALCHEMY_ECHO'] = True
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS']=False
 
 # Make Flask errors be real errors, rather than HTML pages with error info
 app.config['TESTING'] = True
@@ -13,21 +14,21 @@ app.config['TESTING'] = True
 db.drop_all()
 db.create_all()
 
-
 CUPCAKE_DATA = {
     "flavor": "TestFlavor",
     "size": "TestSize",
     "rating": 5,
-    "image": "http://test.com/cupcake.jpg"
+    "image": "http://test.com/cupcake.jpg",
+    "recipe": "http://test.com/recipe"
 }
 
 CUPCAKE_DATA_2 = {
     "flavor": "TestFlavor2",
     "size": "TestSize2",
     "rating": 10,
-    "image": "http://test.com/cupcake2.jpg"
+    "image": "http://test.com/cupcake2.jpg",
+    "recipe": "http://test.com/recipe2"
 }
-
 
 class CupcakeViewsTestCase(TestCase):
     """Tests for views of API."""
@@ -50,7 +51,7 @@ class CupcakeViewsTestCase(TestCase):
 
     def test_list_cupcakes(self):
         with app.test_client() as client:
-            resp = client.get("/api/cupcakes")
+            resp = client.get("/cupcakes")
 
             self.assertEqual(resp.status_code, 200)
 
@@ -62,14 +63,15 @@ class CupcakeViewsTestCase(TestCase):
                         "flavor": "TestFlavor",
                         "size": "TestSize",
                         "rating": 5,
-                        "image": "http://test.com/cupcake.jpg"
+                        "image": "http://test.com/cupcake.jpg",
+                        "recipe": "http://test.com/recipe"
                     }
                 ]
             })
 
     def test_get_cupcake(self):
         with app.test_client() as client:
-            url = f"/api/cupcakes/{self.cupcake.id}"
+            url = f"/cupcakes/{self.cupcake.id}"
             resp = client.get(url)
 
             self.assertEqual(resp.status_code, 200)
@@ -80,13 +82,14 @@ class CupcakeViewsTestCase(TestCase):
                     "flavor": "TestFlavor",
                     "size": "TestSize",
                     "rating": 5,
-                    "image": "http://test.com/cupcake.jpg"
+                    "image": "http://test.com/cupcake.jpg",
+                    "recipe": "http://test.com/recipe"
                 }
             })
 
     def test_create_cupcake(self):
         with app.test_client() as client:
-            url = "/api/cupcakes"
+            url = "/cupcakes"
             resp = client.post(url, json=CUPCAKE_DATA_2)
 
             self.assertEqual(resp.status_code, 201)
@@ -102,8 +105,40 @@ class CupcakeViewsTestCase(TestCase):
                     "flavor": "TestFlavor2",
                     "size": "TestSize2",
                     "rating": 10,
-                    "image": "http://test.com/cupcake2.jpg"
+                    "image": "http://test.com/cupcake2.jpg",
+                    "recipe": "http://test.com/recipe2"
                 }
             })
 
             self.assertEqual(Cupcake.query.count(), 2)
+
+    def test_update_cupcake(self):
+        with app.test_client() as client:
+            url = f"/cupcakes/{self.cupcake.id}"
+            resp = client.patch(url, json=CUPCAKE_DATA_2)
+
+            self.assertEqual(resp.status_code, 201)
+
+            data = resp.json
+
+            self.assertEqual(data, {
+                "cupcake": {
+                    "id": self.cupcake.id,
+                    "flavor": "TestFlavor2",
+                    "size": "TestSize2",
+                    "rating": 10.0,
+                    "image": "http://test.com/cupcake2.jpg",
+                    "recipe": "http://test.com/recipe2"
+                }
+            })
+
+            self.assertEqual(Cupcake.query.count(), 1)
+
+    def test_delete_cupcake(self):
+        with app.test_client() as client:
+            url = f"/cupcakes/{self.cupcake.id}"
+            resp = client.delete(url)
+
+            self.assertEqual(resp.status_code, 200)
+                       
+            self.assertEqual(Cupcake.query.count(), 0)
